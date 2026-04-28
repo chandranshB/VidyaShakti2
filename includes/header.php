@@ -31,9 +31,14 @@ $name = $_SESSION['user_name'];
             <i data-feather="hexagon"></i> Doon ERP
         </div>
         
-        <div class="mb-2" style="padding-bottom: 1rem; border-bottom: 1px solid var(--surface-border);">
-            <div style="color: #fff; font-weight: 500;"><?= htmlspecialchars($name) ?></div>
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;"><?= htmlspecialchars($role) ?></div>
+        <div class="user-profile mb-2">
+            <div class="user-avatar">
+                <?= strtoupper(substr($name, 0, 1)) ?>
+            </div>
+            <div>
+                <div style="font-weight: 600; color: var(--text-primary);"><?= htmlspecialchars($name) ?></div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;"><?= htmlspecialchars($role) ?></div>
+            </div>
         </div>
 
         <ul class="nav-links">
@@ -48,8 +53,11 @@ $name = $_SESSION['user_name'];
                 <li><a href="student_dashboard.php"><i data-feather="grid"></i> Dashboard</a></li>
                 <li><a href="admit_card.php"><i data-feather="credit-card"></i> Admit Card</a></li>
             <?php endif; ?>
-            <li style="margin-top: auto;"><a href="logout.php" style="color: var(--danger);"><i data-feather="log-out"></i> Logout</a></li>
         </ul>
+
+        <a href="logout.php" class="logout-btn">
+            <i data-feather="log-out"></i> Log Out
+        </a>
     </aside>
 
     <!-- Main Content Area -->

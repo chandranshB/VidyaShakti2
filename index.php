@@ -52,26 +52,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="stylesheet" href="css/style.css">
     <script src="https://unpkg.com/feather-icons"></script>
     <style>
-        body { justify-content: center; align-items: center; }
+        body { 
+            justify-content: center; 
+            align-items: center; 
+            background: #f5f5f7;
+        }
         .hero-bg {
             position: absolute; top: 0; left: 0; right: 0; bottom: 0;
-            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 40%),
-                        radial-gradient(circle at bottom left, rgba(6, 182, 212, 0.1), transparent 40%);
-            z-index: -1;
+            background: radial-gradient(circle at top right, rgba(0, 113, 227, 0.08), transparent 40%),
+                        radial-gradient(circle at bottom left, rgba(94, 92, 230, 0.05), transparent 40%);
+            z-index: 0;
         }
     </style>
 </head>
 <body>
 <div class="hero-bg"></div>
 
-<div class="auth-wrapper">
-    <div class="glass-panel auth-box">
+<div class="auth-wrapper" style="background: transparent;">
+    <div class="surface-card auth-box">
         <div class="text-center mb-3">
-            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(99, 102, 241, 0.2); border-radius: 16px; color: var(--primary); margin-bottom: 1rem;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: rgba(0, 113, 227, 0.1); border-radius: 18px; color: var(--primary); margin-bottom: 1rem;">
                 <i data-feather="hexagon" style="width: 32px; height: 32px;"></i>
             </div>
-            <h2>Doon University</h2>
-            <p>Enterprise Resource Planning</p>
+            <h2 style="font-size: 1.6rem;">Doon University</h2>
+            <p style="font-size: 0.9rem;">Enterprise Resource Planning</p>
         </div>
 
         <?php if ($error): ?>

@@ -164,8 +164,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Paper Structure (Sections)</h3>
             
-            <!-- Section A -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+            <div class="responsive-grid">
                 <div style="font-weight: 600;">Section A</div>
                 <div class="form-group" style="margin: 0;">
                     <label>Question Type</label>
@@ -186,7 +185,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- Section B -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+            <div class="responsive-grid">
                 <div style="font-weight: 600;">Section B</div>
                 <div class="form-group" style="margin: 0;">
                     <label>Question Type</label>
@@ -207,7 +206,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- Section C -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 2rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+            <div class="responsive-grid">
                 <div style="font-weight: 600;">Section C</div>
                 <div class="form-group" style="margin: 0;">
                     <label>Question Type</label>

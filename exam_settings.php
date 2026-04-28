@@ -64,7 +64,7 @@ while ($row = $stmt->fetch()) {
             <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Default Paper Structure</h3>
             
             <!-- Section A -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div class="responsive-grid">
                 <div style="font-weight: 600; color: var(--primary);">Section A</div>
                 <div class="form-group" style="margin: 0;">
                     <label>Question Type</label>
@@ -85,7 +85,7 @@ while ($row = $stmt->fetch()) {
             </div>
 
             <!-- Section B -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div class="responsive-grid">
                 <div style="font-weight: 600; color: var(--primary);">Section B</div>
                 <div class="form-group" style="margin: 0;">
                     <label>Question Type</label>
@@ -106,7 +106,7 @@ while ($row = $stmt->fetch()) {
             </div>
 
             <!-- Section C -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 2rem; background: var(--bg-main); padding: 1.5rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+            <div class="responsive-grid">
                 <div style="font-weight: 600; color: var(--primary);">Section C</div>
                 <div class="form-group" style="margin: 0;">
                     <label>Question Type</label>

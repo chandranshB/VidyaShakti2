@@ -7,7 +7,7 @@
     --text-primary: #1d1d1f;
     --text-secondary: #86868b;
     --border-color: #d2d2d7;
-    --primary: #0071e3; /* Apple Blue */
+    --primary: #0071e3;
     --primary-hover: #0077ED;
     --danger: #ff3b30;
     --success: #34c759;
@@ -20,6 +20,22 @@
     --radius-sm: 8px;
     --radius-md: 14px;
     --radius-lg: 20px;
+    
+    --sidebar-width: 280px;
+    --sidebar-collapsed-width: 80px;
+}
+
+[data-theme="dark"] {
+    /* Apple-like Dark Theme */
+    --bg-main: #000000;
+    --bg-surface: #1c1c1e;
+    --text-primary: #f5f5f7;
+    --text-secondary: #a1a1a6;
+    --border-color: #38383a;
+    
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.6);
+    --shadow-lg: 0 12px 48px rgba(0, 0, 0, 0.8);
 }
 
 * {
@@ -36,6 +52,7 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Surface Cards */
@@ -77,16 +94,51 @@ p {
 }
 
 .sidebar {
-    width: 280px;
+    width: var(--sidebar-width);
     background: var(--bg-surface);
     border-right: 1px solid var(--border-color);
-    padding: 2rem;
+    padding: 2rem 1.5rem;
     display: flex;
     flex-direction: column;
     gap: 2rem;
     position: sticky;
     top: 0;
     height: 100vh;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 100;
+}
+
+/* Collapsed Sidebar */
+.sidebar.collapsed {
+    width: var(--sidebar-collapsed-width);
+    padding: 2rem 0.5rem;
+    align-items: center;
+}
+
+.sidebar.collapsed .sidebar-text,
+.sidebar.collapsed .user-profile div:last-child {
+    display: none;
+}
+
+.sidebar.collapsed .sidebar-logo {
+    justify-content: center;
+}
+
+.sidebar.collapsed .sidebar-logo svg {
+    margin: 0;
+}
+
+.sidebar.collapsed .nav-links li a {
+    justify-content: center;
+    padding: 0.85rem;
+}
+
+.sidebar.collapsed .nav-links li a svg {
+    margin: 0;
+}
+
+.sidebar.collapsed .logout-btn {
+    padding: 1rem 0;
 }
 
 .sidebar-logo {
@@ -97,10 +149,13 @@ p {
     align-items: center;
     gap: 0.75rem;
     letter-spacing: -0.03em;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
 .sidebar-logo svg {
     color: var(--primary);
+    flex-shrink: 0;
 }
 
 .user-profile {
@@ -110,6 +165,8 @@ p {
     padding: 1rem;
     background: var(--bg-main);
     border-radius: var(--radius-sm);
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .user-avatar {
@@ -122,6 +179,7 @@ p {
     justify-content: center;
     color: white;
     font-weight: 600;
+    flex-shrink: 0;
 }
 
 .nav-links {
@@ -142,6 +200,12 @@ p {
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.nav-links li a svg {
+    flex-shrink: 0;
 }
 
 .nav-links li a:hover {
@@ -154,19 +218,39 @@ p {
     color: var(--primary);
 }
 
-.logout-btn {
+.sidebar-controls {
     margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.action-btn {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    padding: 1rem;
-    background: rgba(255, 59, 48, 0.1);
-    color: var(--danger);
+    padding: 0.85rem;
+    background: var(--bg-main);
+    color: var(--text-primary);
     text-decoration: none;
     border-radius: var(--radius-sm);
     font-weight: 600;
     transition: all 0.2s ease;
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.action-btn:hover {
+    background: var(--border-color);
+}
+
+.logout-btn {
+    background: rgba(255, 59, 48, 0.1);
+    color: var(--danger);
+    border: none;
 }
 
 .logout-btn:hover {
@@ -175,8 +259,94 @@ p {
 
 .main-content {
     flex: 1;
-    padding: 3rem 4rem;
+    display: flex;
+    flex-direction: column;
     background: var(--bg-main);
+    min-width: 0;
+}
+
+/* Top Mobile Navbar */
+.mobile-header {
+    display: none;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: var(--bg-surface);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 90;
+}
+
+.mobile-menu-btn {
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem;
+}
+
+.content-wrapper {
+    padding: 3rem 4rem;
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Mobile & Tablet Overrides */
+@media (max-width: 1024px) {
+    .sidebar { width: var(--sidebar-collapsed-width); padding: 2rem 0.5rem; align-items: center; }
+    .sidebar .sidebar-text, .sidebar .user-profile div:last-child { display: none; }
+    .sidebar .sidebar-logo { justify-content: center; }
+    .sidebar .sidebar-logo svg { margin: 0; }
+    .sidebar .nav-links li a { justify-content: center; padding: 0.85rem; }
+    .sidebar .nav-links li a svg { margin: 0; }
+    .sidebar .action-btn { padding: 1rem 0; }
+    .content-wrapper { padding: 2rem; }
+}
+
+@media (max-width: 768px) {
+    .mobile-header { display: flex; }
+    .content-wrapper { padding: 1.5rem; }
+    
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        width: 280px;
+        padding: 2rem 1.5rem;
+        align-items: stretch;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .sidebar.mobile-open {
+        left: 0;
+    }
+    
+    /* Reset collapsed styles for mobile open state */
+    .sidebar .sidebar-text, .sidebar .user-profile div:last-child { display: block; }
+    .sidebar .sidebar-logo { justify-content: flex-start; }
+    .sidebar .nav-links li a { justify-content: flex-start; padding: 0.85rem 1rem; }
+    .sidebar .action-btn { padding: 0.85rem; }
+    
+    /* Overlay */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 99;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .sidebar-overlay.show {
+        display: block;
+        opacity: 1;
+    }
 }
 
 /* Forms & Inputs */

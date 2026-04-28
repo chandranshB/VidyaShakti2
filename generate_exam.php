@@ -11,45 +11,70 @@ if ($_SESSION['user_role'] !== 'faculty' && $_SESSION['user_role'] !== 'admin') 
 $generated_paper = null;
 $error = '';
 
+// Fetch default settings
+$stmt = $pdo->query("SELECT setting_key, setting_value FROM settings");
+$defaults = [];
+while ($row = $stmt->fetch()) {
+    $defaults[$row['setting_key']] = $row['setting_value'];
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject_id = $_POST['subject_id'];
-    $target_marks = (int)$_POST['target_marks'];
     
-    // Fetch all questions for this subject
-    $stmt = $pdo->prepare("SELECT id, question_text, marks, difficulty FROM question_pool WHERE subject_id = ?");
-    $stmt->execute([$subject_id]);
-    $pool = $stmt->fetchAll();
+    $sections = [
+        'A' => ['count' => (int)$_POST['sec_a_count'], 'marks' => (int)$_POST['sec_a_marks']],
+        'B' => ['count' => (int)$_POST['sec_b_count'], 'marks' => (int)$_POST['sec_b_marks']],
+        'C' => ['count' => (int)$_POST['sec_c_count'], 'marks' => (int)$_POST['sec_c_marks']]
+    ];
     
-    // Simple greedy random selection to reach exact or close to target marks
-    shuffle($pool);
-    $selected_questions = [];
-    $current_marks = 0;
+    $paper_data = [];
+    $total_marks = 0;
+    $has_error = false;
     
-    foreach ($pool as $q) {
-        if ($current_marks + $q['marks'] <= $target_marks) {
-            $selected_questions[] = $q;
-            $current_marks += $q['marks'];
+    foreach ($sections as $sec_name => $req) {
+        if ($req['count'] > 0 && $req['marks'] > 0) {
+            $stmt = $pdo->prepare("SELECT id, question_text, marks, difficulty FROM question_pool WHERE subject_id = ? AND marks = ?");
+            $stmt->execute([$subject_id, $req['marks']]);
+            $pool = $stmt->fetchAll();
+            
+            if (count($pool) < $req['count']) {
+                $error = "Not enough questions for Section {$sec_name}. You requested {$req['count']} questions worth {$req['marks']} marks, but only " . count($pool) . " exist in the pool.";
+                $has_error = true;
+                break;
+            }
+            
+            shuffle($pool);
+            $selected = array_slice($pool, 0, $req['count']);
+            
+            $paper_data[$sec_name] = [
+                'marks_per_q' => $req['marks'],
+                'questions' => $selected
+            ];
+            
+            $total_marks += ($req['count'] * $req['marks']);
         }
-        if ($current_marks === $target_marks) break;
     }
     
-    if (count($selected_questions) === 0) {
-        $error = "Not enough questions in the pool for this subject to generate a paper.";
-    } else {
+    if (!$has_error && empty($paper_data)) {
+        $error = "Please specify at least one section to generate.";
+        $has_error = true;
+    }
+    
+    if (!$has_error) {
         // Save paper to DB
-        $paper_json = json_encode($selected_questions);
+        $paper_json = json_encode($paper_data);
         $date = date('Y-m-d');
         $stmt = $pdo->prepare("INSERT INTO exam_papers (subject_id, generated_date, paper_json, total_marks) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$subject_id, $date, $paper_json, $current_marks]);
+        $stmt->execute([$subject_id, $date, $paper_json, $total_marks]);
         $paper_id = $pdo->lastInsertId();
         
-        $subject_name = $pdo->query("SELECT name FROM subjects WHERE id = $subject_id")->fetchColumn();
+        $subject_name = $pdo->query("SELECT name FROM subjects WHERE id = " . (int)$subject_id)->fetchColumn();
         $generated_paper = [
             'id' => $paper_id,
             'subject' => $subject_name,
             'date' => $date,
-            'total_marks' => $current_marks,
-            'questions' => $selected_questions
+            'total_marks' => $total_marks,
+            'sections' => $paper_data
         ];
     }
 }
@@ -60,48 +85,73 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     .paper-preview {
         background: #fff;
         color: #000;
-        padding: 3rem;
-        border-radius: 8px;
+        padding: 3rem 4rem;
+        border-radius: var(--radius-md);
         margin-top: 2rem;
+        box-shadow: var(--shadow-md);
+        font-family: 'Times New Roman', Times, serif;
     }
     .paper-header {
         text-align: center;
         border-bottom: 2px solid #000;
-        padding-bottom: 1rem;
+        padding-bottom: 1.5rem;
         margin-bottom: 2rem;
     }
     .paper-header h2 {
         color: #000;
         margin: 0 0 0.5rem 0;
-        -webkit-text-fill-color: initial;
+        font-size: 2rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+    }
+    .paper-header h3 {
+        color: #333;
+        font-size: 1.2rem;
+        margin-bottom: 1rem;
+    }
+    .section-header {
+        font-weight: bold;
+        font-size: 1.2rem;
+        text-align: center;
+        margin: 2.5rem 0 1.5rem 0;
+        text-transform: uppercase;
     }
     .question-item {
         display: flex;
         justify-content: space-between;
         margin-bottom: 1.5rem;
         font-size: 1.1rem;
+        line-height: 1.5;
     }
     @media print {
         body * { visibility: hidden; }
         .paper-preview, .paper-preview * { visibility: visible; }
-        .paper-preview { position: absolute; left: 0; top: 0; width: 100%; box-shadow: none; }
+        .paper-preview { 
+            position: absolute; 
+            left: 0; top: 0; 
+            width: 100%; 
+            box-shadow: none; 
+            padding: 0;
+        }
     }
 </style>
 
 <div class="flex-between mb-3">
-    <h2>Generate Exam Paper</h2>
-    <p>Randomly generates a paper from the Question Pool</p>
+    <div>
+        <h2>Generate Exam Paper</h2>
+        <p>Design your paper structure. The system will randomly pick questions from the pool matching your criteria.</p>
+    </div>
 </div>
 
 <?php if ($error): ?>
-    <div class="badge badge-danger mb-3" style="display:block; padding:1rem;"><?= htmlspecialchars($error) ?></div>
+    <div class="badge badge-danger mb-3" style="display:block; padding:1rem; font-size: 1rem;"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 
-<div class="glass-panel" style="max-width: 600px;">
+<div class="glass-panel" style="max-width: 800px;">
     <form method="POST" action="">
         <div class="form-group">
             <label>Select Subject</label>
-            <select name="subject_id" class="form-control" required style="background: rgba(0,0,0,0.3);">
+            <select name="subject_id" class="form-control" required style="max-width: 400px;">
                 <?php
                 $subjects = $pdo->query("SELECT id, name, code FROM subjects")->fetchAll();
                 foreach ($subjects as $s) {
@@ -110,11 +160,51 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 ?>
             </select>
         </div>
-        <div class="form-group">
-            <label>Target Total Marks</label>
-            <input type="number" name="target_marks" class="form-control" value="50" min="10" max="100" required>
+
+        <div style="margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+            <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Paper Structure (Sections)</h3>
+            
+            <!-- Section A -->
+            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-weight: 600;">Section A</div>
+                <div class="form-group" style="margin: 0;">
+                    <label>No. of Questions</label>
+                    <input type="number" name="sec_a_count" class="form-control" value="<?= htmlspecialchars($defaults['sec_a_count'] ?? 10) ?>" min="0">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Marks per Question</label>
+                    <input type="number" name="sec_a_marks" class="form-control" value="<?= htmlspecialchars($defaults['sec_a_marks'] ?? 2) ?>" min="0">
+                </div>
+            </div>
+
+            <!-- Section B -->
+            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-weight: 600;">Section B</div>
+                <div class="form-group" style="margin: 0;">
+                    <label>No. of Questions</label>
+                    <input type="number" name="sec_b_count" class="form-control" value="<?= htmlspecialchars($defaults['sec_b_count'] ?? 5) ?>" min="0">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Marks per Question</label>
+                    <input type="number" name="sec_b_marks" class="form-control" value="<?= htmlspecialchars($defaults['sec_b_marks'] ?? 5) ?>" min="0">
+                </div>
+            </div>
+
+            <!-- Section C -->
+            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 2rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+                <div style="font-weight: 600;">Section C</div>
+                <div class="form-group" style="margin: 0;">
+                    <label>No. of Questions</label>
+                    <input type="number" name="sec_c_count" class="form-control" value="<?= htmlspecialchars($defaults['sec_c_count'] ?? 3) ?>" min="0">
+                </div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Marks per Question</label>
+                    <input type="number" name="sec_c_marks" class="form-control" value="<?= htmlspecialchars($defaults['sec_c_marks'] ?? 10) ?>" min="0">
+                </div>
+            </div>
         </div>
-        <button type="submit" class="btn btn-primary" style="width: 100%;"><i data-feather="settings"></i> Generate Random Paper</button>
+
+        <button type="submit" class="btn btn-primary"><i data-feather="settings"></i> Generate Random Paper</button>
     </form>
 </div>
 
@@ -123,27 +213,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="paper-header">
         <h2>DOON UNIVERSITY</h2>
         <h3>Semester End Examination</h3>
-        <div style="display: flex; justify-content: space-between; margin-top: 1rem; font-weight: bold;">
+        <div style="display: flex; justify-content: space-between; margin-top: 1.5rem; font-weight: bold; font-size: 1.1rem;">
             <span>Subject: <?= htmlspecialchars($generated_paper['subject']) ?></span>
             <span>Date: <?= date('d M Y', strtotime($generated_paper['date'])) ?></span>
-            <span>Total Marks: <?= $generated_paper['total_marks'] ?></span>
+            <span>Max Marks: <?= $generated_paper['total_marks'] ?></span>
         </div>
     </div>
     
-    <div style="margin-top: 2rem;">
-        <?php foreach ($generated_paper['questions'] as $index => $q): ?>
-            <div class="question-item">
-                <div style="flex: 1;">
-                    <strong>Q<?= $index + 1 ?>.</strong> <?= htmlspecialchars($q['question_text']) ?>
-                </div>
-                <div style="margin-left: 2rem; font-weight: bold;">
-                    [<?= $q['marks'] ?>]
-                </div>
+    <div>
+        <?php 
+        $q_number = 1;
+        foreach ($generated_paper['sections'] as $sec_name => $sec_data): 
+        ?>
+            <div class="section-header">
+                SECTION <?= $sec_name ?> <br>
+                <span style="font-size: 0.9rem; font-weight: normal;">
+                    (Attempt all questions. Each question carries <?= $sec_data['marks_per_q'] ?> marks.)
+                </span>
             </div>
+            
+            <?php foreach ($sec_data['questions'] as $q): ?>
+                <div class="question-item">
+                    <div style="flex: 1; padding-right: 2rem;">
+                        <strong>Q<?= $q_number++ ?>.</strong> <?= nl2br(htmlspecialchars($q['question_text'])) ?>
+                    </div>
+                    <div style="font-weight: bold;">
+                        [<?= $sec_data['marks_per_q'] ?>]
+                    </div>
+                </div>
+            <?php endforeach; ?>
+            
         <?php endforeach; ?>
     </div>
     
-    <div style="text-align: center; margin-top: 4rem; font-weight: bold;">
+    <div style="text-align: center; margin-top: 4rem; font-weight: bold; font-size: 1.2rem;">
         --- END OF PAPER ---
     </div>
     

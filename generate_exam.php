@@ -22,9 +22,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $subject_id = $_POST['subject_id'];
     
     $sections = [
-        'A' => ['count' => (int)$_POST['sec_a_count'], 'marks' => (int)$_POST['sec_a_marks']],
-        'B' => ['count' => (int)$_POST['sec_b_count'], 'marks' => (int)$_POST['sec_b_marks']],
-        'C' => ['count' => (int)$_POST['sec_c_count'], 'marks' => (int)$_POST['sec_c_marks']]
+        'A' => ['type' => $_POST['sec_a_type'], 'count' => (int)$_POST['sec_a_count'], 'marks' => (int)$_POST['sec_a_marks']],
+        'B' => ['type' => $_POST['sec_b_type'], 'count' => (int)$_POST['sec_b_count'], 'marks' => (int)$_POST['sec_b_marks']],
+        'C' => ['type' => $_POST['sec_c_type'], 'count' => (int)$_POST['sec_c_count'], 'marks' => (int)$_POST['sec_c_marks']]
     ];
     
     $paper_data = [];
@@ -33,12 +33,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     foreach ($sections as $sec_name => $req) {
         if ($req['count'] > 0 && $req['marks'] > 0) {
-            $stmt = $pdo->prepare("SELECT id, question_text, marks, difficulty FROM question_pool WHERE subject_id = ? AND marks = ?");
-            $stmt->execute([$subject_id, $req['marks']]);
+            $stmt = $pdo->prepare("SELECT id, question_text, marks, difficulty, question_type FROM question_pool WHERE subject_id = ? AND question_type = ?");
+            $stmt->execute([$subject_id, $req['type']]);
             $pool = $stmt->fetchAll();
             
             if (count($pool) < $req['count']) {
-                $error = "Not enough questions for Section {$sec_name}. You requested {$req['count']} questions worth {$req['marks']} marks, but only " . count($pool) . " exist in the pool.";
+                $error = "Not enough questions for Section {$sec_name}. You requested {$req['count']} '" . ucfirst($req['type']) . "' questions, but only " . count($pool) . " exist in the pool for this subject.";
                 $has_error = true;
                 break;
             }
@@ -147,7 +147,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <div class="badge badge-danger mb-3" style="display:block; padding:1rem; font-size: 1rem;"><?= htmlspecialchars($error) ?></div>
 <?php endif; ?>
 
-<div class="glass-panel" style="max-width: 800px;">
+<div class="glass-panel" style="max-width: 900px;">
     <form method="POST" action="">
         <div class="form-group">
             <label>Select Subject</label>
@@ -165,8 +165,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <h3 style="margin-bottom: 1.5rem; font-size: 1.2rem;">Paper Structure (Sections)</h3>
             
             <!-- Section A -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
                 <div style="font-weight: 600;">Section A</div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Question Type</label>
+                    <select name="sec_a_type" class="form-control" required>
+                        <option value="objective" <?= ($defaults['sec_a_type'] ?? 'objective') === 'objective' ? 'selected' : '' ?>>Objective</option>
+                        <option value="short" <?= ($defaults['sec_a_type'] ?? '') === 'short' ? 'selected' : '' ?>>Short Answer</option>
+                        <option value="long" <?= ($defaults['sec_a_type'] ?? '') === 'long' ? 'selected' : '' ?>>Long Essay</option>
+                    </select>
+                </div>
                 <div class="form-group" style="margin: 0;">
                     <label>No. of Questions</label>
                     <input type="number" name="sec_a_count" class="form-control" value="<?= htmlspecialchars($defaults['sec_a_count'] ?? 10) ?>" min="0">
@@ -178,8 +186,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- Section B -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 1.5rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
                 <div style="font-weight: 600;">Section B</div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Question Type</label>
+                    <select name="sec_b_type" class="form-control" required>
+                        <option value="objective" <?= ($defaults['sec_b_type'] ?? '') === 'objective' ? 'selected' : '' ?>>Objective</option>
+                        <option value="short" <?= ($defaults['sec_b_type'] ?? 'short') === 'short' ? 'selected' : '' ?>>Short Answer</option>
+                        <option value="long" <?= ($defaults['sec_b_type'] ?? '') === 'long' ? 'selected' : '' ?>>Long Essay</option>
+                    </select>
+                </div>
                 <div class="form-group" style="margin: 0;">
                     <label>No. of Questions</label>
                     <input type="number" name="sec_b_count" class="form-control" value="<?= htmlspecialchars($defaults['sec_b_count'] ?? 5) ?>" min="0">
@@ -191,8 +207,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             </div>
 
             <!-- Section C -->
-            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 2rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
+            <div style="display: grid; grid-template-columns: 1fr 2fr 2fr 2fr; gap: 1.5rem; align-items: end; margin-bottom: 2rem; background: var(--bg-main); padding: 1rem; border-radius: var(--radius-sm);">
                 <div style="font-weight: 600;">Section C</div>
+                <div class="form-group" style="margin: 0;">
+                    <label>Question Type</label>
+                    <select name="sec_c_type" class="form-control" required>
+                        <option value="objective" <?= ($defaults['sec_c_type'] ?? '') === 'objective' ? 'selected' : '' ?>>Objective</option>
+                        <option value="short" <?= ($defaults['sec_c_type'] ?? '') === 'short' ? 'selected' : '' ?>>Short Answer</option>
+                        <option value="long" <?= ($defaults['sec_c_type'] ?? 'long') === 'long' ? 'selected' : '' ?>>Long Essay</option>
+                    </select>
+                </div>
                 <div class="form-group" style="margin: 0;">
                     <label>No. of Questions</label>
                     <input type="number" name="sec_c_count" class="form-control" value="<?= htmlspecialchars($defaults['sec_c_count'] ?? 3) ?>" min="0">

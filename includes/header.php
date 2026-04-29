@@ -98,7 +98,7 @@ function isActive($page) {
                 <li><a href="student_dashboard.php" class="<?= isActive('student_dashboard.php') ?>"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
                 <li><a href="profile.php" class="<?= isActive('profile.php') ?>"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
                 <li><a href="attendance.php" class="<?= isActive('attendance.php') ?>"><i data-feather="calendar"></i> <span class="sidebar-text">My Attendance</span></a></li>
-                <li><a href="admit_card.php" class="<?= isActive('admit_card.php') ?>"><i data-feather="credit-card"></i> <span class="sidebar-text">Admit Card</span></a></li>
+                <li><a href="admit_card.php" class="<?= isActive('admit_card.php') ?>" target="_blank"><i data-feather="credit-card"></i> <span class="sidebar-text">Admit Card</span></a></li>
                 <li><a href="settings.php" class="<?= isActive('settings.php') ?>"><i data-feather="shield"></i> <span class="sidebar-text">Settings</span></a></li>
             <?php endif; ?>
         </ul>

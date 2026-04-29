@@ -46,6 +46,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'board_12th' => $_POST['board_12th'] ?? '',
         'year_12th' => $_POST['year_12th'] ?? '',
         'perc_12th' => $_POST['perc_12th'] ?? '',
+
+        // Parent Details
+        'father_name' => $_POST['father_name'] ?? '',
+        'father_dob' => $_POST['father_dob'] ?? '',
+        'father_mobile' => $_POST['father_mobile'] ?? '',
+        'father_email' => $_POST['father_email'] ?? '',
+        'father_occupation' => $_POST['father_occupation'] ?? '',
+        'father_qualification' => $_POST['father_qualification'] ?? '',
+        'father_income' => $_POST['father_income'] ?? '',
+
+        'mother_name' => $_POST['mother_name'] ?? '',
+        'mother_dob' => $_POST['mother_dob'] ?? '',
+        'mother_mobile' => $_POST['mother_mobile'] ?? '',
+        'mother_email' => $_POST['mother_email'] ?? '',
+        'mother_occupation' => $_POST['mother_occupation'] ?? '',
+        'mother_qualification' => $_POST['mother_qualification'] ?? '',
+        'mother_income' => $_POST['mother_income'] ?? '',
+
+        'grandparents_living' => $_POST['grandparents_living'] ?? 'NO',
+        'joint_family' => $_POST['joint_family'] ?? 'NO',
     ];
     $metadata_json = json_encode($meta_data);
 
@@ -327,8 +347,8 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
     <!-- Details Section -->
     <div class="surface-card" style="padding: 2rem;">
         <div class="tabs-container">
-            <button type="button" class="tab-btn active" onclick="switchTab('personal')">Personal Details</button>
-            <button type="button" class="tab-btn" onclick="switchTab('academic')">Academic History</button>
+            <button type="button" class="tab-btn active" onclick="switchTab('personal')">Personal & Academic</button>
+            <button type="button" class="tab-btn" onclick="switchTab('parents')">Parents' Details</button>
         </div>
 
         <form method="POST" id="profileForm">
@@ -437,11 +457,8 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                         <input type="text" name="country" class="form-control" value="<?= htmlspecialchars($meta['country'] ?? 'India') ?>">
                     </div>
                 </div>
-            </div>
 
-            <!-- Tab 3: Academic -->
-            <div id="tab-academic" class="tab-content">
-                <h3 class="section-title" style="margin-top: 0;">10th Details</h3>
+                <h3 class="section-title">Class 10th Details</h3>
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>School Name</label>
@@ -461,7 +478,7 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                     </div>
                 </div>
 
-                <h3 class="section-title">12th Details</h3>
+                <h3 class="section-title">Class 12th Details</h3>
                 <div class="form-grid">
                     <div class="form-group full-width">
                         <label>School Name</label>
@@ -478,6 +495,148 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                     <div class="form-group">
                         <label>Percentage / CGPA</label>
                         <input type="text" name="perc_12th" class="form-control" value="<?= htmlspecialchars($meta['perc_12th'] ?? '') ?>">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Parents' Details -->
+            <div id="tab-parents" class="tab-content">
+                <!-- Father's Details -->
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), var(--accent)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-feather="user" style="width: 18px; height: 18px; color: white;"></i>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.05rem;">Father's Details</h3>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Father's Full Name</label>
+                        <input type="text" name="father_name" class="form-control" value="<?= htmlspecialchars($meta['father_name'] ?? '') ?>" placeholder="As per official records">
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="text" name="father_dob" class="form-control flatpickr-parent" value="<?= htmlspecialchars($meta['father_dob'] ?? '') ?>" placeholder="Select Date">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">+91</span>
+                            <input type="tel" name="father_mobile" class="form-control" value="<?= htmlspecialchars($meta['father_mobile'] ?? '') ?>" placeholder="10-digit number" maxlength="10" style="padding-left: 48px;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="father_email" class="form-control" value="<?= htmlspecialchars($meta['father_email'] ?? '') ?>" placeholder="father@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Occupation</label>
+                        <select name="father_occupation" class="form-control">
+                            <option value="">Select Occupation</option>
+                            <?php foreach(['Government Job', 'Private Job', 'Business / Self-Employed', 'Agriculture / Farming', 'Defence / Armed Forces', 'Doctor / Medical', 'Engineer / Technical', 'Teacher / Professor', 'Lawyer / Legal', 'Retired', 'Daily Wage Worker', 'Not Employed', 'Others'] as $occ): ?>
+                                <option value="<?= $occ ?>" <?= ($meta['father_occupation'] ?? '') == $occ ? 'selected' : '' ?>><?= $occ ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Highest Qualification</label>
+                        <select name="father_qualification" class="form-control">
+                            <option value="">Select Qualification</option>
+                            <?php foreach(['Below 10th', '10th Pass', '12th Pass', 'ITI / Diploma', 'B.A.', 'B.Sc.', 'B.Com.', 'B.Tech / B.E.', 'BBA / BCA', 'M.A.', 'M.Sc.', 'M.Com.', 'M.Tech / M.E.', 'MBA', 'Ph.D.', 'Medical (MBBS/MD)', 'Law (LLB/LLM)', 'Other'] as $qual): ?>
+                                <option value="<?= $qual ?>" <?= ($meta['father_qualification'] ?? '') == $qual ? 'selected' : '' ?>><?= $qual ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Income</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">₹</span>
+                            <input type="number" name="father_income" class="form-control" value="<?= htmlspecialchars($meta['father_income'] ?? '') ?>" placeholder="e.g. 500000" style="padding-left: 32px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mother's Details -->
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin: 2rem 0 1.25rem 0;">
+                    <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--primary)); display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                        <i data-feather="user" style="width: 18px; height: 18px; color: white;"></i>
+                    </div>
+                    <h3 style="margin: 0; font-size: 1.05rem;">Mother's Details</h3>
+                </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Mother's Full Name</label>
+                        <input type="text" name="mother_name" class="form-control" value="<?= htmlspecialchars($meta['mother_name'] ?? '') ?>" placeholder="As per official records">
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth</label>
+                        <input type="text" name="mother_dob" class="form-control flatpickr-parent" value="<?= htmlspecialchars($meta['mother_dob'] ?? '') ?>" placeholder="Select Date">
+                    </div>
+                    <div class="form-group">
+                        <label>Mobile Number</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">+91</span>
+                            <input type="tel" name="mother_mobile" class="form-control" value="<?= htmlspecialchars($meta['mother_mobile'] ?? '') ?>" placeholder="10-digit number" maxlength="10" style="padding-left: 48px;">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="mother_email" class="form-control" value="<?= htmlspecialchars($meta['mother_email'] ?? '') ?>" placeholder="mother@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Occupation</label>
+                        <select name="mother_occupation" class="form-control">
+                            <option value="">Select Occupation</option>
+                            <?php foreach(['Government Job', 'Private Job', 'Business / Self-Employed', 'Homemaker', 'Agriculture / Farming', 'Defence / Armed Forces', 'Doctor / Medical', 'Engineer / Technical', 'Teacher / Professor', 'Lawyer / Legal', 'Retired', 'Daily Wage Worker', 'Not Employed', 'Others'] as $occ): ?>
+                                <option value="<?= $occ ?>" <?= ($meta['mother_occupation'] ?? '') == $occ ? 'selected' : '' ?>><?= $occ ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Highest Qualification</label>
+                        <select name="mother_qualification" class="form-control">
+                            <option value="">Select Qualification</option>
+                            <?php foreach(['Below 10th', '10th Pass', '12th Pass', 'ITI / Diploma', 'B.A.', 'B.Sc.', 'B.Com.', 'B.Tech / B.E.', 'BBA / BCA', 'M.A.', 'M.Sc.', 'M.Com.', 'M.Tech / M.E.', 'MBA', 'Ph.D.', 'Medical (MBBS/MD)', 'Law (LLB/LLM)', 'Other'] as $qual): ?>
+                                <option value="<?= $qual ?>" <?= ($meta['mother_qualification'] ?? '') == $qual ? 'selected' : '' ?>><?= $qual ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Income</label>
+                        <div style="position: relative;">
+                            <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 0.9rem; font-weight: 600;">₹</span>
+                            <input type="number" name="mother_income" class="form-control" value="<?= htmlspecialchars($meta['mother_income'] ?? '') ?>" placeholder="e.g. 300000" style="padding-left: 32px;">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Family Information -->
+                <h3 class="section-title" style="margin-top: 2rem;">Family Information</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Are grandparents living with your family?</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: 1.5px solid <?= ($meta['grandparents_living'] ?? 'NO') == 'YES' ? 'var(--primary)' : 'var(--border-color)' ?>; background: <?= ($meta['grandparents_living'] ?? 'NO') == 'YES' ? 'rgba(var(--primary-rgb), 0.08)' : 'transparent' ?>; transition: all 0.2s;" onclick="selectToggle(this, 'grandparents_living', 'YES')">
+                                <input type="radio" name="grandparents_living" value="YES" <?= ($meta['grandparents_living'] ?? 'NO') == 'YES' ? 'checked' : '' ?> style="display: none;">
+                                <span style="font-size: 0.9rem; font-weight: 500;">Yes</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: 1.5px solid <?= ($meta['grandparents_living'] ?? 'NO') == 'NO' ? 'var(--primary)' : 'var(--border-color)' ?>; background: <?= ($meta['grandparents_living'] ?? 'NO') == 'NO' ? 'rgba(var(--primary-rgb), 0.08)' : 'transparent' ?>; transition: all 0.2s;" onclick="selectToggle(this, 'grandparents_living', 'NO')">
+                                <input type="radio" name="grandparents_living" value="NO" <?= ($meta['grandparents_living'] ?? 'NO') == 'NO' ? 'checked' : '' ?> style="display: none;">
+                                <span style="font-size: 0.9rem; font-weight: 500;">No</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Is your family a joint family?</label>
+                        <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: 1.5px solid <?= ($meta['joint_family'] ?? 'NO') == 'YES' ? 'var(--primary)' : 'var(--border-color)' ?>; background: <?= ($meta['joint_family'] ?? 'NO') == 'YES' ? 'rgba(var(--primary-rgb), 0.08)' : 'transparent' ?>; transition: all 0.2s;" onclick="selectToggle(this, 'joint_family', 'YES')">
+                                <input type="radio" name="joint_family" value="YES" <?= ($meta['joint_family'] ?? 'NO') == 'YES' ? 'checked' : '' ?> style="display: none;">
+                                <span style="font-size: 0.9rem; font-weight: 500;">Yes</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; padding: 0.6rem 1.2rem; border-radius: var(--radius-sm); border: 1.5px solid <?= ($meta['joint_family'] ?? 'NO') == 'NO' ? 'var(--primary)' : 'var(--border-color)' ?>; background: <?= ($meta['joint_family'] ?? 'NO') == 'NO' ? 'rgba(var(--primary-rgb), 0.08)' : 'transparent' ?>; transition: all 0.2s;" onclick="selectToggle(this, 'joint_family', 'NO')">
+                                <input type="radio" name="joint_family" value="NO" <?= ($meta['joint_family'] ?? 'NO') == 'NO' ? 'checked' : '' ?> style="display: none;">
+                                <span style="font-size: 0.9rem; font-weight: 500;">No</span>
+                            </label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -664,6 +823,32 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
         monthSelectorType: "dropdown",
         yearSelectorType: "static"
     });
+
+    // Initialize Flatpickr for parent DOB fields
+    document.querySelectorAll('.flatpickr-parent').forEach(el => {
+        flatpickr(el, {
+            dateFormat: "Y-m-d",
+            altInput: true,
+            altFormat: "F j, Y",
+            maxDate: "today",
+            disableMobile: false,
+            monthSelectorType: "dropdown",
+            yearSelectorType: "static"
+        });
+    });
+
+    // Interactive toggle button for Yes/No radio groups
+    function selectToggle(el, groupName, value) {
+        const allLabels = el.parentElement.querySelectorAll('label');
+        allLabels.forEach(label => {
+            label.style.borderColor = 'var(--border-color)';
+            label.style.background = 'transparent';
+            label.querySelector('input').checked = false;
+        });
+        el.style.borderColor = 'var(--primary)';
+        el.style.background = 'rgba(var(--primary-rgb), 0.08)';
+        el.querySelector('input').checked = true;
+    }
 </script>
 
 <?php include 'includes/footer.php'; ?>

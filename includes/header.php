@@ -21,9 +21,15 @@ $name = $_SESSION['user_name'];
     <link rel="stylesheet" href="css/style.css?v=<?= time() ?>">
     <script src="https://unpkg.com/feather-icons"></script>
     <script>
-        // Apply theme immediately to prevent flash
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
+        // Professional Theme Management
+        (function() {
+            const getTheme = () => {
+                const saved = localStorage.getItem('theme');
+                if (saved) return saved;
+                return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            };
+            document.documentElement.setAttribute('data-theme', getTheme());
+        })();
         
         // Setup initial sidebar state for desktop
         if (window.innerWidth > 1024) {
@@ -56,8 +62,12 @@ $name = $_SESSION['user_name'];
         </div>
         
         <div class="user-profile mb-2">
-            <div class="user-avatar">
-                <?= strtoupper(substr($name, 0, 1)) ?>
+            <div class="user-avatar" style="padding: 0; overflow: hidden; background: <?= empty($_SESSION['profile_image']) ? 'linear-gradient(135deg, var(--primary), var(--accent))' : 'transparent' ?>;">
+                <?php if (!empty($_SESSION['profile_image'])): ?>
+                    <img src="<?= htmlspecialchars($_SESSION['profile_image']) ?>" style="width: 100%; height: 100%; object-fit: cover;">
+                <?php else: ?>
+                    <?= strtoupper(substr($name, 0, 1)) ?>
+                <?php endif; ?>
             </div>
             <div>
                 <div style="font-weight: 600; color: var(--text-primary);"><?= htmlspecialchars($name) ?></div>
@@ -68,14 +78,17 @@ $name = $_SESSION['user_name'];
         <ul class="nav-links">
             <?php if ($role === 'admin'): ?>
                 <li><a href="admin_dashboard.php"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
+                <li><a href="profile.php"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
                 <li><a href="manage_users.php"><i data-feather="users"></i> <span class="sidebar-text">Manage Users</span></a></li>
                 <li><a href="exam_settings.php"><i data-feather="settings"></i> <span class="sidebar-text">Exam Settings</span></a></li>
             <?php elseif ($role === 'faculty'): ?>
                 <li><a href="faculty_dashboard.php"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
+                <li><a href="profile.php"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
                 <li><a href="manage_questions.php"><i data-feather="database"></i> <span class="sidebar-text">Question Pool</span></a></li>
                 <li><a href="generate_exam.php"><i data-feather="file-text"></i> <span class="sidebar-text">Generate Exam</span></a></li>
             <?php elseif ($role === 'student'): ?>
                 <li><a href="student_dashboard.php"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
+                <li><a href="profile.php"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
                 <li><a href="admit_card.php"><i data-feather="credit-card"></i> <span class="sidebar-text">Admit Card</span></a></li>
             <?php endif; ?>
         </ul>

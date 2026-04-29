@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     position: relative;
     width: 100%;
 }
-.search-wrapper i {
+.search-wrapper svg {
     position: absolute;
     left: 1rem;
     top: 50%;

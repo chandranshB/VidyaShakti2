@@ -43,6 +43,35 @@ if ($s1_id) {
     // Add some marks for Alice
     $stmt = $pdo->prepare("INSERT IGNORE INTO marks (student_id, subject_id, exam_type, marks_obtained, max_marks) VALUES ((SELECT id FROM students WHERE user_id = ?), 1, 'midterm', 45, 50)");
     $stmt->execute([$s1_id]);
+
+    // Add dummy attendance for Alice
+    $alice_id = $pdo->query("SELECT id FROM students WHERE enrollment_no = 'ENR2026001'")->fetchColumn();
+    if ($alice_id) {
+        $subjects = $pdo->query("SELECT id FROM subjects")->fetchAll(PDO::FETCH_COLUMN);
+        $statuses = ['present', 'present', 'present', 'absent', 'late', 'present'];
+        
+        foreach ($subjects as $subj_id) {
+            for ($i = 0; $i < 10; $i++) {
+                $status = $statuses[array_rand($statuses)];
+                $date = date('Y-m-d', strtotime("-$i days"));
+                $stmt = $pdo->prepare("INSERT IGNORE INTO attendance (student_id, subject_id, date, status) VALUES (?, ?, ?, ?)");
+                $stmt->execute([$alice_id, $subj_id, $date, $status]);
+            }
+        }
+    }
+}
+
+// Student 3: Chandransh Binjola (Specific Details)
+$s3_id = createUser($pdo, 'CHANDRANSH BINJOLA', 'chandranshbinjola@outlook.com', 'chandransh123', 'student');
+if ($s3_id) {
+    $stmt = $pdo->prepare("INSERT IGNORE INTO students (
+        user_id, enrollment_no, course, batch_year, 
+        father_name, mother_name, abc_id, is_ph, gender, 
+        cast_category, dob, mobile, semester, department_name
+    ) VALUES (?, '24CS-13', 'Bachelor of Science (Hons/Hons with Research) Computer Science', 2024, 
+        'Anil Kumar Binjola', 'Shanti Amoli Binjola', '611082282845', 'NO', 'Male', 
+        'UR', '2006-08-13', '8630071845', 4, 'Computer Science')");
+    $stmt->execute([$s3_id]);
 }
 
 // Student 2

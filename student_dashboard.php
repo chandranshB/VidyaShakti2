@@ -11,7 +11,7 @@ if ($_SESSION['user_role'] !== 'student') {
 $user_id = $_SESSION['user_id'];
 
 // Get student details
-$stmt = $pdo->prepare("SELECT enrollment_no, course, batch_year FROM students WHERE user_id = ?");
+$stmt = $pdo->prepare("SELECT id, enrollment_no, course, batch_year FROM students WHERE user_id = ?");
 $stmt->execute([$user_id]);
 $student = $stmt->fetch();
 
@@ -20,6 +20,24 @@ if (!$student) {
     require_once 'includes/footer.php';
     exit;
 }
+
+$student_id = $student['id'];
+
+// Calculate real attendance percentage
+$stmt = $pdo->prepare("
+    SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN status = 'present' THEN 1 ELSE 0 END) as present,
+        SUM(CASE WHEN status = 'late' THEN 1 ELSE 0 END) as late
+    FROM attendance 
+    WHERE student_id = ?
+");
+$stmt->execute([$student_id]);
+$attendance_stats = $stmt->fetch();
+
+$total_classes = $attendance_stats['total'];
+$present_weighted = $attendance_stats['present'] + ($attendance_stats['late'] * 0.5);
+$attendance_percentage = ($total_classes > 0) ? round(($present_weighted / $total_classes) * 100, 1) : 0;
 ?>
 
 <div class="flex-between mb-3">
@@ -31,11 +49,11 @@ if (!$student) {
 </div>
 
 <div class="dashboard-grid">
-    <div class="glass-panel stat-card">
+    <div class="glass-panel stat-card" onclick="location.href='attendance.php'" style="cursor: pointer;">
         <div class="stat-icon" style="color: var(--success); background: rgba(16, 185, 129, 0.1);"><i data-feather="check-circle"></i></div>
         <div class="stat-info">
             <h4>Attendance</h4>
-            <h2>85%</h2> <!-- Hardcoded for visual demo -->
+            <h2><?= $attendance_percentage ?>%</h2>
         </div>
     </div>
     <div class="glass-panel stat-card">

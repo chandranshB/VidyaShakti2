@@ -13,8 +13,6 @@ $error_msg = '';
 
 // Handle Settings Update
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $name = trim($_POST['name'] ?? '');
-    $email = trim($_POST['email'] ?? '');
     $phone = trim($_POST['phone'] ?? '');
     $current_password = $_POST['current_password'] ?? '';
     $new_password = $_POST['new_password'] ?? '';
@@ -23,13 +21,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
         $pdo->beginTransaction();
 
-        // 1. Update Basic Details
-        $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, phone = ? WHERE id = ?");
-        $stmt->execute([$name, $email, $phone, $user_id]);
-        
-        // Update session vars
-        $_SESSION['user_name'] = $name;
-        // if user_phone is stored, update it
+        // 1. Update Phone
+        $stmt = $pdo->prepare("UPDATE users SET phone = ? WHERE id = ?");
+        $stmt->execute([$phone, $user_id]);
 
         // 2. Handle Password Change (if requested)
         if (!empty($current_password) || !empty($new_password) || !empty($confirm_password)) {
@@ -60,8 +54,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     } catch (Exception $e) {
         $pdo->rollBack();
-        if ($e->getCode() == 23000) { // Unique constraint violation (e.g. duplicate phone/email)
-            $error_msg = "That email or phone number is already registered to another account.";
+        if ($e->getCode() == 23000) { // Unique constraint violation
+            $error_msg = "That phone number is already registered to another account.";
         } else {
             $error_msg = $e->getMessage();
         }
@@ -99,19 +93,9 @@ include 'includes/header.php';
 
 <div class="surface-card" style="padding: 2rem; max-width: 800px;">
     <form method="POST">
-        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--text-primary);">Basic Information</h3>
+        <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--text-primary);">Login Credentials</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
             <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Full Name</label>
-                <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($user['name']) ?>" required>
-            </div>
-            
-            <div class="form-group">
-                <label>Email Address</label>
-                <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
-            </div>
-
-            <div class="form-group">
                 <label>Phone Number (Login ID)</label>
                 <input type="tel" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 9876543210" required>
             </div>

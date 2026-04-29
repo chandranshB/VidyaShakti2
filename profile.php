@@ -18,6 +18,9 @@ $user = $stmt->fetch();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $cropped_image = $_POST['cropped_image'] ?? '';
+    $cropped_signature = $_POST['cropped_signature'] ?? '';
+    $name = trim($_POST['name'] ?? $user['name']);
+    $email = trim($_POST['email'] ?? $user['email']);
 
     // Collect metadata fields
     $meta_data = [
@@ -47,8 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $metadata_json = json_encode($meta_data);
 
     try {
-        $update_query = "UPDATE users SET metadata = ?";
-        $params = [$metadata_json];
+        // Build dynamic SET clauses
+        $set_parts = ["name = ?", "email = ?", "metadata = ?"];
+        $params = [$name, $email, $metadata_json];
 
         // Handle Profile Image Upload (Base64)
         if (!empty($cropped_image)) {
@@ -69,19 +73,41 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             file_put_contents($filePath, $image_base64);
-
-            $update_query = "UPDATE users SET profile_image = ?, metadata = ?";
-            $params = [$filePath, $metadata_json];
-            
-            $_SESSION['profile_image'] = $filePath; // Update session instantly
+            $set_parts[] = "profile_image = ?";
+            $params[] = $filePath;
+            $_SESSION['profile_image'] = $filePath;
         }
 
-        $update_query .= " WHERE id = ?";
+        // Handle Signature Image Upload (Base64)
+        if (!empty($cropped_signature)) {
+            $sig_parts = explode(";base64,", $cropped_signature);
+            $sig_type_aux = explode("image/", $sig_parts[0]);
+            $sig_type = $sig_type_aux[1] ?? 'jpeg';
+            $sig_base64 = base64_decode($sig_parts[1]);
+
+            $sigName = 'sig_' . $user_id . '_' . time() . '.' . $sig_type;
+            $sigPath = 'uploads/signatures/' . $sigName;
+
+            if (!is_dir('uploads/signatures')) {
+                mkdir('uploads/signatures', 0777, true);
+            }
+
+            if (!empty($user['signature_image']) && file_exists($user['signature_image'])) {
+                unlink($user['signature_image']);
+            }
+
+            file_put_contents($sigPath, $sig_base64);
+            $set_parts[] = "signature_image = ?";
+            $params[] = $sigPath;
+        }
+
         $params[] = $user_id;
+        $update_query = "UPDATE users SET " . implode(", ", $set_parts) . " WHERE id = ?";
 
         $update_stmt = $pdo->prepare($update_query);
         $update_stmt->execute($params);
 
+        $_SESSION['user_name'] = $name;
         $success_msg = "Profile updated successfully!";
         
         $stmt->execute([$user_id]);
@@ -264,7 +290,7 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
 <?php endif; ?>
 
 <div class="split-layout">
-    <!-- Avatar Section -->
+    <!-- Avatar & Signature Section -->
     <div class="surface-card" style="text-align: center;">
         <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">Profile Picture</h3>
         
@@ -282,6 +308,25 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
             </label>
             <input type="file" id="imageUpload" accept="image/png, image/jpeg, image/webp" style="display: none;">
         </div>
+
+        <div style="border-top: 1px solid var(--border-color); margin-top: 0.5rem; padding-top: 1.5rem;">
+            <h3 style="margin-bottom: 1rem; font-size: 1.1rem;">Signature</h3>
+            <div style="position: relative; width: 200px; height: 80px; margin: 0 auto 1rem auto; border-radius: var(--radius-sm); overflow: hidden; border: 2px dashed var(--border-color); background: var(--input-bg);">
+                <?php if (!empty($user['signature_image'])): ?>
+                    <img src="<?= htmlspecialchars($user['signature_image']) ?>" id="signaturePreview" style="width: 100%; height: 100%; object-fit: contain; padding: 4px;">
+                <?php else: ?>
+                    <div id="signaturePreview" style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-size: 0.8rem; gap: 0.4rem;">
+                        <i data-feather="edit-3" style="width: 14px; height: 14px;"></i> No signature
+                    </div>
+                <?php endif; ?>
+                
+                <label for="signatureUpload" style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.6); color: white; padding: 0.3rem; cursor: pointer; font-size: 0.75rem; font-weight: 500; transition: background 0.2s;">
+                    Upload
+                </label>
+                <input type="file" id="signatureUpload" accept="image/png, image/jpeg, image/webp" style="display: none;">
+            </div>
+            <p style="font-size: 0.75rem; color: var(--text-secondary); margin: 0;">Upload a clear scan of your signature</p>
+        </div>
     </div>
 
     <!-- Details Section -->
@@ -293,10 +338,19 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
 
         <form method="POST" id="profileForm">
             <input type="hidden" name="cropped_image" id="croppedImageData">
+            <input type="hidden" name="cropped_signature" id="croppedSignatureData">
             
-            <!-- Tab 2: Personal -->
+            <!-- Tab: Personal -->
             <div id="tab-personal" class="tab-content active">
                 <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" class="form-control" value="<?= htmlspecialchars($user['name']) ?>" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" name="email" class="form-control" value="<?= htmlspecialchars($user['email']) ?>" required>
+                    </div>
                     <div class="form-group">
                         <label>Date of Birth</label>
                         <input type="text" name="dob" id="dobPicker" class="form-control" value="<?= htmlspecialchars($meta['dob'] ?? '') ?>" placeholder="Select Date">
@@ -358,7 +412,26 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                     </div>
                     <div class="form-group">
                         <label>State</label>
-                        <input type="text" name="state" class="form-control" value="<?= htmlspecialchars($meta['state'] ?? '') ?>">
+                        <select name="state" class="form-control">
+                            <option value="">Select State</option>
+                            <?php
+                            $states = [
+                                'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+                                'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
+                                'Himachal Pradesh', 'Jharkhand', 'Karnataka', 'Kerala',
+                                'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+                                'Mizoram', 'Nagaland', 'Odisha', 'Punjab',
+                                'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
+                                'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+                                // Union Territories
+                                'Andaman and Nicobar Islands', 'Chandigarh',
+                                'Dadra and Nagar Haveli and Daman and Diu', 'Delhi',
+                                'Jammu and Kashmir', 'Ladakh', 'Lakshadweep', 'Puducherry'
+                            ];
+                            foreach ($states as $st): ?>
+                                <option value="<?= $st ?>" <?= ($meta['state'] ?? '') == $st ? 'selected' : '' ?>><?= $st ?></option>
+                            <?php endforeach; ?>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label>PIN Code</label>
@@ -423,11 +496,11 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
     </div>
 </div>
 
-<!-- Cropper Modal -->
+<<!-- Cropper Modal (Profile Image) -->
 <div id="cropperModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 1000; align-items: center; justify-content: center; backdrop-filter: blur(5px);">
     <div class="surface-card" style="width: 90%; max-width: 500px; padding: 1.5rem; background: var(--bg-surface);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="margin: 0; font-size: 1.2rem;">Crop Image</h3>
+            <h3 style="margin: 0; font-size: 1.2rem;" id="cropperModalTitle">Crop Image</h3>
             <button type="button" class="icon-btn" onclick="closeCropper()" style="background: none; border: none; color: var(--text-secondary); cursor: pointer;">
                 <i data-feather="x"></i>
             </button>
@@ -439,7 +512,7 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
 
         <div style="display: flex; gap: 1rem; justify-content: flex-end;">
             <button type="button" class="btn btn-secondary" onclick="closeCropper()">Cancel</button>
-            <button type="button" class="btn btn-primary" onclick="applyCrop()">Apply & Compress</button>
+            <button type="button" class="btn btn-primary" id="cropperApplyBtn" onclick="applyCrop()">Apply & Compress</button>
         </div>
     </div>
 </div>
@@ -452,39 +525,57 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
 
 <script>
     let cropper;
+    let currentCropMode = 'avatar'; // 'avatar' or 'signature'
     const imageUpload = document.getElementById('imageUpload');
+    const signatureUpload = document.getElementById('signatureUpload');
     const imageToCrop = document.getElementById('imageToCrop');
     const cropperModal = document.getElementById('cropperModal');
     const avatarPreview = document.getElementById('avatarPreview');
     const croppedImageData = document.getElementById('croppedImageData');
+    const croppedSignatureData = document.getElementById('croppedSignatureData');
 
-    // Handle File Selection
+    // Handle Profile Image Selection
     imageUpload.addEventListener('change', function(e) {
         const files = e.target.files;
         if (files && files.length > 0) {
-            const file = files[0];
+            currentCropMode = 'avatar';
             const reader = new FileReader();
-            
             reader.onload = function(event) {
                 imageToCrop.src = event.target.result;
                 openCropper();
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(files[0]);
+        }
+    });
+
+    // Handle Signature Image Selection
+    signatureUpload.addEventListener('change', function(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            currentCropMode = 'signature';
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                imageToCrop.src = event.target.result;
+                openCropper();
+            };
+            reader.readAsDataURL(files[0]);
         }
     });
 
     function openCropper() {
         cropperModal.style.display = 'flex';
+        document.getElementById('cropperModalTitle').textContent =
+            currentCropMode === 'avatar' ? 'Crop Profile Photo' : 'Crop Signature';
         
-        // Destroy old cropper if exists
         if (cropper) {
             cropper.destroy();
         }
+
+        const ratio = currentCropMode === 'avatar' ? (230 / 200) : (300 / 100);
         
-        // Initialize new cropper
         cropper = new Cropper(imageToCrop, {
-            aspectRatio: 230 / 200, // Government standard ratio
-            viewMode: 1, // Restrict crop box to not exceed size of canvas
+            aspectRatio: ratio,
+            viewMode: 1,
             dragMode: 'move',
             autoCropArea: 0.9,
             restore: false,
@@ -499,7 +590,11 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
 
     function closeCropper() {
         cropperModal.style.display = 'none';
-        imageUpload.value = ''; // Reset file input
+        if (currentCropMode === 'avatar') {
+            imageUpload.value = '';
+        } else {
+            signatureUpload.value = '';
+        }
         if (cropper) {
             cropper.destroy();
             cropper = null;
@@ -509,49 +604,57 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
     function applyCrop() {
         if (!cropper) return;
 
-        // Render the cropped area to a canvas, compressing it to exactly 230x200
-        const canvas = cropper.getCroppedCanvas({
-            width: 230,
-            height: 200,
-            imageSmoothingEnabled: true,
-            imageSmoothingQuality: 'high',
-        });
-
-        // Compress to JPEG on the fly and ensure size is under 50KB
-        // 50KB = 51200 bytes. Base64 length * 0.75 gives approx bytes.
-        let quality = 0.9;
-        let compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-
-        while (compressedBase64.length > 68000 && quality > 0.1) {
-            quality -= 0.1;
-            compressedBase64 = canvas.toDataURL('image/jpeg', quality);
-        }
-
-        // Preview the image locally
-        if (avatarPreview.tagName === 'IMG') {
-            avatarPreview.src = compressedBase64;
+        if (currentCropMode === 'avatar') {
+            const canvas = cropper.getCroppedCanvas({
+                width: 230, height: 200,
+                imageSmoothingEnabled: true, imageSmoothingQuality: 'high',
+            });
+            let quality = 0.9;
+            let compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            while (compressedBase64.length > 68000 && quality > 0.1) {
+                quality -= 0.1;
+                compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            }
+            if (avatarPreview.tagName === 'IMG') {
+                avatarPreview.src = compressedBase64;
+            } else {
+                const img = document.createElement('img');
+                img.src = compressedBase64;
+                img.id = 'avatarPreview';
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
+                avatarPreview.parentNode.replaceChild(img, avatarPreview);
+            }
+            croppedImageData.value = compressedBase64;
         } else {
-            // Replace div with img if they didn't have an avatar previously
-            const img = document.createElement('img');
-            img.src = compressedBase64;
-            img.id = 'avatarPreview';
-            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover;';
-            avatarPreview.parentNode.replaceChild(img, avatarPreview);
+            // Signature crop
+            const canvas = cropper.getCroppedCanvas({
+                width: 300, height: 100,
+                imageSmoothingEnabled: true, imageSmoothingQuality: 'high',
+            });
+            let quality = 0.9;
+            let compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            while (compressedBase64.length > 68000 && quality > 0.1) {
+                quality -= 0.1;
+                compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+            }
+            const sigPreview = document.getElementById('signaturePreview');
+            if (sigPreview.tagName === 'IMG') {
+                sigPreview.src = compressedBase64;
+            } else {
+                const img = document.createElement('img');
+                img.src = compressedBase64;
+                img.id = 'signaturePreview';
+                img.style.cssText = 'width: 100%; height: 100%; object-fit: contain; padding: 4px;';
+                sigPreview.parentNode.replaceChild(img, sigPreview);
+            }
+            croppedSignatureData.value = compressedBase64;
         }
-
-        // Store the base64 string in the hidden input to send on form submit
-        croppedImageData.value = compressedBase64;
-        
-        // Close modal
         closeCropper();
     }
 
     function switchTab(tabId) {
-        // Update Buttons
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         event.currentTarget.classList.add('active');
-
-        // Update Content
         document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
         document.getElementById('tab-' + tabId).classList.add('active');
     }
@@ -562,7 +665,7 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
         altInput: true,
         altFormat: "F j, Y",
         maxDate: "today",
-        disableMobile: false, // Let mobile use native, robust OS popup
+        disableMobile: false,
         monthSelectorType: "dropdown",
         yearSelectorType: "static"
     });

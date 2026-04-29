@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($login_id && $password) {
-        $stmt = $pdo->prepare("SELECT id, name, role, password, profile_image FROM users WHERE phone = :login_id OR email = :login_id");
+        $stmt = $pdo->prepare("SELECT id, name, role, password, profile_image FROM users WHERE phone = :login_id");
         $stmt->execute(['login_id' => $login_id]);
         $user = $stmt->fetch();
 
@@ -187,8 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         .form-control {
             height: 54px;
-            background: var(--bg-main);
-            border: 1.5px solid transparent;
+            background: var(--input-bg);
+            border: 2px solid transparent;
             border-radius: 16px;
             font-size: 1rem;
             padding: 0 1.25rem;
@@ -197,10 +197,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             color: var(--text-primary);
         }
 
+        .form-control:hover {
+            background: var(--input-bg-hover);
+        }
+
         .form-control:focus {
             background: var(--bg-surface);
             border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.08);
+            box-shadow: 0 0 0 4px var(--primary-light);
             transform: translateY(-1px);
         }
 
@@ -237,9 +241,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             top: 2rem;
             right: 2rem;
             background: var(--bg-surface);
-            border: 1px solid var(--border-color);
-            width: 48px;
-            height: 48px;
+            border: none;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -247,8 +251,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             cursor: pointer;
             color: var(--text-secondary);
             transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
             z-index: 100;
+        }
+
+        [data-theme="dark"] .theme-switch {
+            background: rgba(255, 255, 255, 0.05);
+            color: #f5f5f7;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
         }
 
         .theme-switch:hover {
@@ -288,10 +300,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         @media (max-width: 480px) {
             body {
                 padding: 1rem;
-                align-items: flex-start;
-                padding-top: 15vh;
+                align-items: center;
+                justify-content: center;
             }
-            .login-card {
+            .login-card, [data-theme="dark"] .login-card {
                 padding: 2.5rem 1.5rem;
                 border: none;
                 background: transparent;
@@ -317,11 +329,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             pointer-events: none;
         }
 
-        /* Micro-interactions */
-        input:not(:placeholder-shown) {
-            background: var(--bg-surface);
-            border-color: var(--border-color);
-        }
     </style>
 </head>
 <body>
@@ -349,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="POST">
         <div class="form-group">
-            <input type="text" name="login_id" class="form-control" placeholder="Phone or Email" required autocomplete="username">
+            <input type="text" name="login_id" class="form-control" placeholder="Phone Number" required autocomplete="username">
         </div>
         
         <div class="form-group">

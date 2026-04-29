@@ -11,6 +11,12 @@ if (!isset($_SESSION['user_id'])) {
 
 $role = $_SESSION['user_role'];
 $name = $_SESSION['user_name'];
+
+$currentPage = basename($_SERVER['PHP_SELF']);
+function isActive($page) {
+    global $currentPage;
+    return $currentPage === $page ? 'active' : '';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -77,19 +83,22 @@ $name = $_SESSION['user_name'];
 
         <ul class="nav-links">
             <?php if ($role === 'admin'): ?>
-                <li><a href="admin_dashboard.php"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
-                <li><a href="profile.php"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
-                <li><a href="manage_users.php"><i data-feather="users"></i> <span class="sidebar-text">Manage Users</span></a></li>
-                <li><a href="exam_settings.php"><i data-feather="settings"></i> <span class="sidebar-text">Exam Settings</span></a></li>
+                <li><a href="admin_dashboard.php" class="<?= isActive('admin_dashboard.php') ?>"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
+                <li><a href="profile.php" class="<?= isActive('profile.php') ?>"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
+                <li><a href="manage_users.php" class="<?= isActive('manage_users.php') ?>"><i data-feather="users"></i> <span class="sidebar-text">Manage Users</span></a></li>
+                <li><a href="exam_settings.php" class="<?= isActive('exam_settings.php') ?>"><i data-feather="settings"></i> <span class="sidebar-text">Exam Settings</span></a></li>
+                <li><a href="settings.php" class="<?= isActive('settings.php') ?>"><i data-feather="shield"></i> <span class="sidebar-text">Settings</span></a></li>
             <?php elseif ($role === 'faculty'): ?>
-                <li><a href="faculty_dashboard.php"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
-                <li><a href="profile.php"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
-                <li><a href="manage_questions.php"><i data-feather="database"></i> <span class="sidebar-text">Question Pool</span></a></li>
-                <li><a href="generate_exam.php"><i data-feather="file-text"></i> <span class="sidebar-text">Generate Exam</span></a></li>
+                <li><a href="faculty_dashboard.php" class="<?= isActive('faculty_dashboard.php') ?>"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
+                <li><a href="profile.php" class="<?= isActive('profile.php') ?>"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
+                <li><a href="manage_questions.php" class="<?= isActive('manage_questions.php') ?>"><i data-feather="database"></i> <span class="sidebar-text">Question Pool</span></a></li>
+                <li><a href="generate_exam.php" class="<?= isActive('generate_exam.php') ?>"><i data-feather="file-text"></i> <span class="sidebar-text">Generate Exam</span></a></li>
+                <li><a href="settings.php" class="<?= isActive('settings.php') ?>"><i data-feather="shield"></i> <span class="sidebar-text">Settings</span></a></li>
             <?php elseif ($role === 'student'): ?>
-                <li><a href="student_dashboard.php"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
-                <li><a href="profile.php"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
-                <li><a href="admit_card.php"><i data-feather="credit-card"></i> <span class="sidebar-text">Admit Card</span></a></li>
+                <li><a href="student_dashboard.php" class="<?= isActive('student_dashboard.php') ?>"><i data-feather="grid"></i> <span class="sidebar-text">Dashboard</span></a></li>
+                <li><a href="profile.php" class="<?= isActive('profile.php') ?>"><i data-feather="user"></i> <span class="sidebar-text">My Profile</span></a></li>
+                <li><a href="admit_card.php" class="<?= isActive('admit_card.php') ?>"><i data-feather="credit-card"></i> <span class="sidebar-text">Admit Card</span></a></li>
+                <li><a href="settings.php" class="<?= isActive('settings.php') ?>"><i data-feather="shield"></i> <span class="sidebar-text">Settings</span></a></li>
             <?php endif; ?>
         </ul>
 

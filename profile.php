@@ -54,20 +54,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $set_parts = ["name = ?", "email = ?", "metadata = ?"];
         $params = [$name, $email, $metadata_json];
 
+        // Use phone number for clean, predictable filenames
+        $phone = $user['phone'] ?? $user_id;
+
         // Handle Profile Image Upload (Base64)
         if (!empty($cropped_image)) {
-            $image_parts = explode(";base64,", $cropped_image);
-            $image_type_aux = explode("image/", $image_parts[0]);
-            $image_type = $image_type_aux[1] ?? 'jpeg';
-            $image_base64 = base64_decode($image_parts[1]);
-
-            $fileName = 'user_' . $user_id . '_' . time() . '.' . $image_type;
-            $filePath = 'uploads/profiles/' . $fileName;
+            $image_base64 = base64_decode(explode(";base64,", $cropped_image)[1]);
+            $filePath = 'uploads/profiles/' . $phone . '_photo.jpeg';
 
             if (!is_dir('uploads/profiles')) {
                 mkdir('uploads/profiles', 0777, true);
             }
 
+            // Delete old file if it exists (handles both old and new naming)
             if (!empty($user['profile_image']) && file_exists($user['profile_image'])) {
                 unlink($user['profile_image']);
             }
@@ -80,18 +79,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Handle Signature Image Upload (Base64)
         if (!empty($cropped_signature)) {
-            $sig_parts = explode(";base64,", $cropped_signature);
-            $sig_type_aux = explode("image/", $sig_parts[0]);
-            $sig_type = $sig_type_aux[1] ?? 'jpeg';
-            $sig_base64 = base64_decode($sig_parts[1]);
-
-            $sigName = 'sig_' . $user_id . '_' . time() . '.' . $sig_type;
-            $sigPath = 'uploads/signatures/' . $sigName;
+            $sig_base64 = base64_decode(explode(";base64,", $cropped_signature)[1]);
+            $sigPath = 'uploads/signatures/' . $phone . '_sign.jpeg';
 
             if (!is_dir('uploads/signatures')) {
                 mkdir('uploads/signatures', 0777, true);
             }
 
+            // Delete old file if it exists
             if (!empty($user['signature_image']) && file_exists($user['signature_image'])) {
                 unlink($user['signature_image']);
             }

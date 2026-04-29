@@ -3,10 +3,10 @@ require_once 'includes/db.php';
 
 echo "Setting up dummy users...\n";
 
-function createUser($pdo, $name, $email, $password, $role) {
+function createUser($pdo, $name, $email, $phone, $password, $role) {
     try {
-        $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$name, $email, $password, $role]);
+        $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role) VALUES (?, ?, ?, ?, ?)");
+        $stmt->execute([$name, $email, $phone, $password, $role]);
         return $pdo->lastInsertId();
     } catch (PDOException $e) {
         if ($e->getCode() == 23000) { // Duplicate
@@ -20,7 +20,7 @@ function createUser($pdo, $name, $email, $password, $role) {
 }
 
 // Teacher 1
-$t1_id = createUser($pdo, 'Prof. Alan Turing', 'alan@doon.edu', 'turing123', 'faculty');
+$t1_id = createUser($pdo, 'Prof. Alan Turing', 'alan@doon.edu', '9876543213', 'turing123', 'faculty');
 if ($t1_id) {
     // Add to faculties
     $stmt = $pdo->prepare("INSERT IGNORE INTO faculties (user_id, department_id, employee_code) VALUES (?, 1, 'EMP1001')");
@@ -28,14 +28,14 @@ if ($t1_id) {
 }
 
 // Teacher 2
-$t2_id = createUser($pdo, 'Dr. Marie Curie', 'marie@doon.edu', 'curie123', 'faculty');
+$t2_id = createUser($pdo, 'Dr. Marie Curie', 'marie@doon.edu', '9876543214', 'curie123', 'faculty');
 if ($t2_id) {
     $stmt = $pdo->prepare("INSERT IGNORE INTO faculties (user_id, department_id, employee_code) VALUES (?, 2, 'EMP1002')");
     $stmt->execute([$t2_id]);
 }
 
 // Student 1
-$s1_id = createUser($pdo, 'Alice Wonderland', 'alice@student.doon.edu', 'alice123', 'student');
+$s1_id = createUser($pdo, 'Alice Wonderland', 'alice@student.doon.edu', '9876543215', 'alice123', 'student');
 if ($s1_id) {
     $stmt = $pdo->prepare("INSERT IGNORE INTO students (user_id, enrollment_no, course, batch_year) VALUES (?, 'ENR2026001', 'B.Tech CS', 2026)");
     $stmt->execute([$s1_id]);
@@ -62,7 +62,7 @@ if ($s1_id) {
 }
 
 // Student 3: Chandransh Binjola (Specific Details)
-$s3_id = createUser($pdo, 'CHANDRANSH BINJOLA', 'chandranshbinjola@outlook.com', 'chandransh123', 'student');
+$s3_id = createUser($pdo, 'CHANDRANSH BINJOLA', 'chandranshbinjola@outlook.com', '8630071845', 'chandransh123', 'student');
 if ($s3_id) {
     $stmt = $pdo->prepare("INSERT IGNORE INTO students (
         user_id, enrollment_no, course, batch_year, 
@@ -75,7 +75,7 @@ if ($s3_id) {
 }
 
 // Student 2
-$s2_id = createUser($pdo, 'Bob Builder', 'bob@student.doon.edu', 'bob123', 'student');
+$s2_id = createUser($pdo, 'Bob Builder', 'bob@student.doon.edu', '9876543216', 'bob123', 'student');
 if ($s2_id) {
     $stmt = $pdo->prepare("INSERT IGNORE INTO students (user_id, enrollment_no, course, batch_year) VALUES (?, 'ENR2026002', 'B.Tech CS', 2026)");
     $stmt->execute([$s2_id]);
@@ -83,10 +83,13 @@ if ($s2_id) {
 
 echo "\nDummy users created successfully!\n";
 echo "---------------------------------\n";
-echo "Faculty 1: alan@doon.edu / turing123\n";
-echo "Faculty 2: marie@doon.edu / curie123\n";
-echo "Student 1: alice@student.doon.edu / alice123\n";
-echo "Student 2: bob@student.doon.edu / bob123\n";
-echo "Admin (from schema): admin@doonuniversity.edu / admin123\n";
+echo "Admin: 9876543210 / admin123 (from schema.sql)\n";
+echo "Faculty 1 (Dr. Sharma): 9876543211 / faculty123 (from schema.sql)\n";
+echo "Student 1 (John Doe): 9876543212 / student123 (from schema.sql)\n";
+echo "Faculty 2 (Alan): 9876543213 / turing123\n";
+echo "Faculty 3 (Marie): 9876543214 / curie123\n";
+echo "Student 2 (Alice): 9876543215 / alice123\n";
+echo "Student 3 (Chandransh): 8630071845 / chandransh123\n";
+echo "Student 4 (Bob): 9876543216 / bob123\n";
 
 ?>

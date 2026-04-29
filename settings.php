@@ -96,7 +96,7 @@ include 'includes/header.php';
         <h3 style="font-size: 1.1rem; font-weight: 600; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem; color: var(--text-primary);">Login Credentials</h3>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
             <div class="form-group" style="grid-column: 1 / -1;">
-                <label>Phone Number (Login ID)</label>
+                <label>Phone Number</label>
                 <input type="tel" name="phone" class="form-control" value="<?= htmlspecialchars($user['phone'] ?? '') ?>" placeholder="e.g. 9876543210" required>
             </div>
         </div>

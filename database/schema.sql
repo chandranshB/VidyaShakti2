@@ -139,16 +139,16 @@ CREATE TABLE IF NOT EXISTS marks (
 -- ==========================================
 
 -- Insert Admin
-INSERT IGNORE INTO users (name, email, password, role) VALUES 
-('God Admin', 'admin@doonuniversity.edu', 'admin123', 'admin');
+INSERT IGNORE INTO users (name, email, phone, password, role) VALUES 
+('God Admin', 'admin@doonuniversity.edu', '9876543210', 'admin123', 'admin');
 
 -- Insert Department
 INSERT IGNORE INTO departments (name) VALUES 
 ('Computer Science'), ('Business Administration');
 
 -- Insert Faculty
-INSERT IGNORE INTO users (name, email, password, role) VALUES 
-('Dr. Sharma', 'sharma@doonuniversity.edu', 'faculty123', 'faculty');
+INSERT IGNORE INTO users (name, email, phone, password, role) VALUES 
+('Dr. Sharma', 'sharma@doonuniversity.edu', '9876543211', 'faculty123', 'faculty');
 INSERT IGNORE INTO faculties (user_id, department_id, employee_code) VALUES 
 ((SELECT id FROM users WHERE email='sharma@doonuniversity.edu'), 1, 'EMP001');
 
@@ -158,8 +158,8 @@ INSERT IGNORE INTO subjects (name, code, department_id) VALUES
 ('Database Systems', 'CS202', 1);
 
 -- Insert Student
-INSERT IGNORE INTO users (name, email, password, role) VALUES 
-('John Doe', 'john@student.doonuniversity.edu', 'student123', 'student');
+INSERT IGNORE INTO users (name, email, phone, password, role) VALUES 
+('John Doe', 'john@student.doonuniversity.edu', '9876543212', 'student123', 'student');
 INSERT IGNORE INTO students (user_id, enrollment_no, course, batch_year) VALUES 
 ((SELECT id FROM users WHERE email='john@student.doonuniversity.edu'), 'ENR2024001', 'B.Tech CS', 2024);
 

@@ -199,6 +199,104 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
     .form-grid { grid-template-columns: 1fr; }
 }
 
+/* ── Real-time Validation Styles ── */
+.form-group { position: relative; }
+
+.form-group .validation-msg {
+    display: none;
+    font-size: 0.78rem;
+    font-weight: 500;
+    margin-top: 0.35rem;
+    padding-left: 0.15rem;
+    align-items: center;
+    gap: 0.3rem;
+    animation: fadeIn 0.25s ease-out;
+}
+.form-group .validation-msg svg { width: 13px; height: 13px; flex-shrink: 0; }
+
+.form-group.is-valid .form-control {
+    border-color: var(--success);
+    background: var(--input-bg);
+}
+.form-group.is-valid .form-control:focus {
+    box-shadow: 0 0 0 4px rgba(30, 142, 62, 0.1);
+    border-color: var(--success);
+}
+.form-group.is-valid .validation-msg {
+    display: flex;
+    color: var(--success);
+}
+
+.form-group.is-invalid .form-control {
+    border-color: var(--danger);
+    background: var(--input-bg);
+    animation: fieldShake 0.4s ease;
+}
+.form-group.is-invalid .form-control:focus {
+    box-shadow: 0 0 0 4px rgba(217, 48, 37, 0.1);
+    border-color: var(--danger);
+}
+.form-group.is-invalid .validation-msg {
+    display: flex;
+    color: var(--danger);
+}
+
+@keyframes fieldShake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-4px); }
+    40% { transform: translateX(4px); }
+    60% { transform: translateX(-3px); }
+    80% { transform: translateX(2px); }
+}
+
+/* Validation status icon inside input */
+.form-group .field-status-icon {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    width: 18px; height: 18px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.form-group.is-valid .field-status-icon,
+.form-group.is-invalid .field-status-icon { opacity: 1; }
+
+/* Profile Completion Bar */
+.completion-bar-wrap {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    background: var(--bg-surface);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+}
+.completion-bar-wrap .completion-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+.completion-bar-wrap .completion-label span:last-child {
+    font-variant-numeric: tabular-nums;
+}
+.completion-bar-track {
+    width: 100%;
+    height: 6px;
+    background: var(--input-bg);
+    border-radius: 999px;
+    overflow: hidden;
+}
+.completion-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--primary), var(--accent));
+    transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+    width: 0%;
+}
+
 /* Perfected Apple-like Flatpickr Theme */
 .flatpickr-calendar {
     background: rgba(255, 255, 255, 0.85) !important;
@@ -346,10 +444,22 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
 
     <!-- Details Section -->
     <div class="surface-card" style="padding: 2rem;">
+        <?php if ($_SESSION['user_role'] === 'student'): ?>
+        <div class="completion-bar-wrap" id="completionBarWrap">
+            <div class="completion-bar-header">
+                <span>Profile Completion</span>
+                <span id="completionPercent">0%</span>
+            </div>
+            <div class="completion-bar-track">
+                <div class="completion-bar-fill" id="completionBarFill"></div>
+            </div>
+        </div>
+
         <div class="tabs-container">
             <button type="button" class="tab-btn active" onclick="switchTab('personal')">Personal & Academic</button>
             <button type="button" class="tab-btn" onclick="switchTab('parents')">Parents' Details</button>
         </div>
+        <?php endif; ?>
 
         <form method="POST" id="profileForm">
             <input type="hidden" name="cropped_image" id="croppedImageData">
@@ -377,6 +487,7 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                             <option value="Female" <?= ($meta['gender'] ?? '') == 'Female' ? 'selected' : '' ?>>Female</option>
                         </select>
                     </div>
+                    <?php if ($_SESSION['user_role'] === 'student'): ?>
                     <div class="form-group">
                         <label>Blood Group</label>
                         <select name="blood_group" class="form-control">
@@ -413,8 +524,10 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                         <label>ABC ID</label>
                         <input type="text" name="abc_id" class="form-control" value="<?= htmlspecialchars($meta['abc_id'] ?? '') ?>" placeholder="Academic Bank of Credits">
                     </div>
+                    <?php endif; ?>
                 </div>
 
+                <?php if ($_SESSION['user_role'] === 'student'): ?>
                 <h3 class="section-title">Address</h3>
                 <div class="form-grid">
                     <div class="form-group full-width">
@@ -497,8 +610,10 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                         <input type="text" name="perc_12th" class="form-control" value="<?= htmlspecialchars($meta['perc_12th'] ?? '') ?>">
                     </div>
                 </div>
+                <?php endif; ?>
             </div>
 
+            <?php if ($_SESSION['user_role'] === 'student'): ?>
             <!-- Tab: Parents' Details -->
             <div id="tab-parents" class="tab-content">
                 <!-- Father's Details -->
@@ -640,6 +755,7 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <div style="margin-top: 2rem; border-top: 1px solid var(--border-color); padding-top: 1.5rem;">
                 <button type="submit" class="btn btn-primary" style="width: 100%; height: 50px; font-size: 1.05rem;">
@@ -849,6 +965,223 @@ $meta = json_decode($user['metadata'] ?? '{}', true) ?: [];
         el.style.background = 'rgba(var(--primary-rgb), 0.08)';
         el.querySelector('input').checked = true;
     }
+
+    // ── Real-time Form Validation Engine ──
+    (function() {
+        const form = document.getElementById('profileForm');
+        if (!form) return;
+
+        // SVG icons for inline messages
+        const checkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+        const xSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
+
+        // Validation rules – keyed by input "name" attribute
+        const rules = {
+            name:           { required: true, minLen: 2, label: 'Full Name' },
+            email:          { required: true, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, label: 'Email', patternMsg: 'Enter a valid email address' },
+            aadhar:         { pattern: /^\d{12}$/, label: 'Aadhar', patternMsg: 'Must be exactly 12 digits' },
+            abc_id:         { pattern: /^\d{12}$/, label: 'ABC ID', patternMsg: 'Must be exactly 12 digits' },
+            pin:            { pattern: /^\d{6}$/, label: 'PIN Code', patternMsg: 'Must be exactly 6 digits' },
+            district:       { minLen: 2, label: 'District' },
+            address:        { minLen: 5, label: 'Address' },
+            country:        { minLen: 2, label: 'Country' },
+            school_10th:    { minLen: 2, label: 'School Name' },
+            board_10th:     { minLen: 2, label: 'Board' },
+            year_10th:      { pattern: /^(19|20)\d{2}$/, label: 'Year', patternMsg: 'Enter a valid 4-digit year' },
+            perc_10th:      { pattern: /^(\d{1,2}(\.\d{1,2})?|100(\.0{1,2})?)$/, label: 'Percentage', patternMsg: 'Enter 0–100 (e.g. 87.5)' },
+            school_12th:    { minLen: 2, label: 'School Name' },
+            board_12th:     { minLen: 2, label: 'Board' },
+            year_12th:      { pattern: /^(19|20)\d{2}$/, label: 'Year', patternMsg: 'Enter a valid 4-digit year' },
+            perc_12th:      { pattern: /^(\d{1,2}(\.\d{1,2})?|100(\.0{1,2})?)$/, label: 'Percentage', patternMsg: 'Enter 0–100 (e.g. 87.5)' },
+            father_name:    { minLen: 2, label: "Father's Name" },
+            father_mobile:  { pattern: /^\d{10}$/, label: 'Mobile', patternMsg: 'Must be exactly 10 digits' },
+            father_email:   { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, label: 'Email', patternMsg: 'Enter a valid email' },
+            mother_name:    { minLen: 2, label: "Mother's Name" },
+            mother_mobile:  { pattern: /^\d{10}$/, label: 'Mobile', patternMsg: 'Must be exactly 10 digits' },
+            mother_email:   { pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, label: 'Email', patternMsg: 'Enter a valid email' },
+            father_income:  { pattern: /^\d+$/, label: 'Income', patternMsg: 'Enter a numeric value' },
+            mother_income:  { pattern: /^\d+$/, label: 'Income', patternMsg: 'Enter a numeric value' },
+        };
+
+        // Inject validation-msg container for every validatable field
+        Object.keys(rules).forEach(name => {
+            const el = form.querySelector('[name="' + name + '"]');
+            if (!el) return;
+            const group = el.closest('.form-group');
+            if (!group || group.querySelector('.validation-msg')) return;
+            const msg = document.createElement('div');
+            msg.className = 'validation-msg';
+            group.appendChild(msg);
+        });
+
+        // Core validate function
+        function validate(el) {
+            const name = el.getAttribute('name');
+            const rule = rules[name];
+            if (!rule) return true;
+            const val = el.value.trim();
+            const group = el.closest('.form-group');
+            const msgEl = group ? group.querySelector('.validation-msg') : null;
+
+            // Skip validation on empty optional fields
+            if (!rule.required && val === '') {
+                clearState(group, msgEl);
+                return true;
+            }
+
+            // Required check
+            if (rule.required && val === '') {
+                setInvalid(group, msgEl, rule.label + ' is required');
+                return false;
+            }
+
+            // Min length
+            if (rule.minLen && val.length > 0 && val.length < rule.minLen) {
+                setInvalid(group, msgEl, 'At least ' + rule.minLen + ' characters');
+                return false;
+            }
+
+            // Pattern
+            if (rule.pattern && val.length > 0 && !rule.pattern.test(val)) {
+                setInvalid(group, msgEl, rule.patternMsg || 'Invalid format');
+                return false;
+            }
+
+            // Passed
+            if (val.length > 0) {
+                setValid(group, msgEl, 'Looks good');
+            } else {
+                clearState(group, msgEl);
+            }
+            return true;
+        }
+
+        function setValid(group, msgEl, text) {
+            if (!group) return;
+            group.classList.remove('is-invalid');
+            group.classList.add('is-valid');
+            if (msgEl) msgEl.innerHTML = checkSvg + ' ' + text;
+            updateCompletion();
+        }
+        function setInvalid(group, msgEl, text) {
+            if (!group) return;
+            group.classList.remove('is-valid');
+            group.classList.add('is-invalid');
+            if (msgEl) msgEl.innerHTML = xSvg + ' ' + text;
+            updateCompletion();
+        }
+        function clearState(group, msgEl) {
+            if (!group) return;
+            group.classList.remove('is-valid', 'is-invalid');
+            if (msgEl) msgEl.innerHTML = '';
+            updateCompletion();
+        }
+
+        // Attach listeners with debounce for 'input', immediate for 'blur'
+        let debounceTimers = {};
+        Object.keys(rules).forEach(name => {
+            const el = form.querySelector('[name="' + name + '"]');
+            if (!el) return;
+
+            el.addEventListener('blur', () => validate(el));
+            el.addEventListener('input', () => {
+                clearTimeout(debounceTimers[name]);
+                debounceTimers[name] = setTimeout(() => validate(el), 350);
+            });
+        });
+
+        // Select fields – validate on change
+        form.querySelectorAll('select[name]').forEach(sel => {
+            sel.addEventListener('change', () => {
+                const group = sel.closest('.form-group');
+                if (!group) return;
+                let msgEl = group.querySelector('.validation-msg');
+                if (!msgEl) {
+                    msgEl = document.createElement('div');
+                    msgEl.className = 'validation-msg';
+                    group.appendChild(msgEl);
+                }
+                if (sel.value) {
+                    setValid(group, msgEl, 'Selected');
+                } else {
+                    clearState(group, msgEl);
+                }
+            });
+        });
+
+        // Prevent submit if any invalid fields
+        form.addEventListener('submit', function(e) {
+            let hasError = false;
+            Object.keys(rules).forEach(name => {
+                const el = form.querySelector('[name="' + name + '"]');
+                if (el && !validate(el)) hasError = true;
+            });
+            if (hasError) {
+                e.preventDefault();
+                // Scroll to first error
+                const firstErr = form.querySelector('.is-invalid');
+                if (firstErr) {
+                    // Make sure we're on the right tab
+                    const parentTab = firstErr.closest('.tab-content');
+                    if (parentTab && !parentTab.classList.contains('active')) {
+                        const tabId = parentTab.id.replace('tab-', '');
+                        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+                        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                        parentTab.classList.add('active');
+                        // Highlight the correct tab button
+                        document.querySelectorAll('.tab-btn').forEach(btn => {
+                            if (btn.textContent.toLowerCase().includes(tabId === 'personal' ? 'personal' : 'parent')) {
+                                btn.classList.add('active');
+                            }
+                        });
+                    }
+                    firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        });
+
+        // ── Profile Completion Tracker ──
+        function updateCompletion() {
+            const allFields = form.querySelectorAll('input[name]:not([type="hidden"]):not([type="radio"]):not([type="file"]), select[name]');
+            let filled = 0, total = 0;
+            allFields.forEach(f => {
+                if (f.name === 'cropped_image' || f.name === 'cropped_signature') return;
+                total++;
+                if (f.value && f.value.trim() !== '') filled++;
+            });
+            const pct = total > 0 ? Math.round((filled / total) * 100) : 0;
+            const bar = document.getElementById('completionBarFill');
+            const label = document.getElementById('completionPercent');
+            if (bar) bar.style.width = pct + '%';
+            if (label) label.textContent = pct + '%';
+        }
+
+        // Run once on page load
+        updateCompletion();
+
+        // Also validate pre-filled fields on load (mark them green)
+        setTimeout(() => {
+            Object.keys(rules).forEach(name => {
+                const el = form.querySelector('[name="' + name + '"]');
+                if (el && el.value.trim() !== '') validate(el);
+            });
+            // Mark filled selects
+            form.querySelectorAll('select[name]').forEach(sel => {
+                if (sel.value) {
+                    const group = sel.closest('.form-group');
+                    if (group) {
+                        let msgEl = group.querySelector('.validation-msg');
+                        if (!msgEl) {
+                            msgEl = document.createElement('div');
+                            msgEl.className = 'validation-msg';
+                            group.appendChild(msgEl);
+                        }
+                        setValid(group, msgEl, 'Selected');
+                    }
+                }
+            });
+        }, 300);
+    })();
 </script>
 
 <?php include 'includes/footer.php'; ?>

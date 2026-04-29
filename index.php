@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($login_id && $password) {
-        $stmt = $pdo->prepare("SELECT id, name, role, password, profile_image FROM users WHERE phone = :login_id");
+        $stmt = $pdo->prepare("SELECT id, name, role, password, profile_image FROM users WHERE phone = :login_id OR email = :login_id");
         $stmt->execute(['login_id' => $login_id]);
         $user = $stmt->fetch();
 
@@ -356,7 +356,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     <form method="POST">
         <div class="form-group">
-            <input type="text" name="login_id" class="form-control" placeholder="Phone Number" required autocomplete="username">
+            <input type="text" name="login_id" class="form-control" placeholder="Email or Phone Number" required autocomplete="username">
         </div>
         
         <div class="form-group">

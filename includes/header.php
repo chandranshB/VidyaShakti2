@@ -50,7 +50,8 @@ function isActive($page) {
         .sidebar-collapsed-init .sidebar .sidebar-text, 
         .sidebar-collapsed-init .sidebar .user-profile div:last-child { display: none; }
         .sidebar-collapsed-init .sidebar .sidebar-logo { justify-content: center; }
-        .sidebar-collapsed-init .sidebar .sidebar-logo svg { margin: 0; }
+        .sidebar-collapsed-init .sidebar .sidebar-logo svg,
+        .sidebar-collapsed-init .sidebar .sidebar-logo img { margin: 0; display: block; }
         .sidebar-collapsed-init .sidebar .nav-links li a { justify-content: center; padding: 0.85rem; }
         .sidebar-collapsed-init .sidebar .nav-links li a svg { margin: 0; }
         .sidebar-collapsed-init .sidebar .action-btn { padding: 1rem 0; }
@@ -63,8 +64,9 @@ function isActive($page) {
     
     <!-- Sidebar Navigation -->
     <aside class="sidebar" id="sidebar">
-        <div class="sidebar-logo">
-            <i data-feather="hexagon"></i> <span class="sidebar-text">Doon ERP</span>
+        <div class="sidebar-logo" style="display: flex; align-items: center; gap: 12px;">
+            <img src="assets/logo.svg" alt="Doon University" style="width: 32px; height: 32px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
+            <span class="sidebar-text">Doon ERP</span>
         </div>
         
         <div class="user-profile mb-2">
@@ -123,7 +125,7 @@ function isActive($page) {
         <!-- Mobile Header -->
         <header class="mobile-header">
             <div style="display: flex; align-items: center; gap: 0.75rem; font-weight: 700; color: var(--text-primary);">
-                <i data-feather="hexagon" style="color: var(--primary);"></i> Doon ERP
+                <img src="assets/logo.svg" alt="Logo" style="height: 28px; width: 28px; object-fit: contain;"> Doon ERP
             </div>
             <button class="mobile-menu-btn" id="mobileMenuBtn">
                 <i data-feather="menu"></i>

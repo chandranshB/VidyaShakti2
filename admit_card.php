@@ -8,13 +8,21 @@ if (!isset($_SESSION['user_id']) || $_SESSION['user_role'] !== 'student') {
 
 $user_id = $_SESSION['user_id'];
 $stmt = $pdo->prepare("
-    SELECT u.name, u.email, u.phone, u.profile_image, u.signature_image, s.* 
+    SELECT u.name, u.email, u.phone, u.profile_image, u.signature_image, u.metadata, s.* 
     FROM users u 
     JOIN students s ON u.id = s.user_id 
     WHERE u.id = ?
 ");
 $stmt->execute([$user_id]);
-$student = $stmt->fetch();
+$student = $stmt->fetch(PDO::FETCH_ASSOC);
+
+if ($student && !empty($student['metadata'])) {
+    $meta = json_decode($student['metadata'], true);
+    if (is_array($meta)) {
+        // Merge metadata into student array, giving priority to metadata for dynamically updated fields
+        $student = array_merge($student, $meta);
+    }
+}
 
 if (!$student) {
     die("Student record not found.");
@@ -574,7 +582,7 @@ if (!$student) {
                     <div class="d-row">
                         <span class="d-label">Category / PwD</span>
                         <span
-                            class="d-val"><?= htmlspecialchars(($student['cast_category'] ?? 'N/A') . ' / ' . ($student['is_ph'] ?? 'NO')) ?></span>
+                            class="d-val"><?= htmlspecialchars(($student['category'] ?? $student['cast_category'] ?? 'N/A') . ' / ' . ($student['is_ph'] ?? 'NO')) ?></span>
                     </div>
                     <div class="d-row">
                         <span class="d-label">ABC ID</span>
